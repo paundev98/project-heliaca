@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameInput : MonoBehaviour
 {
     [SerializeField] private Camera _camera;
-    [SerializeField] private LayerMask ground;
+    [SerializeField] private LayerMask groundMask;
     private PlayerInputActions playerInputActions;
 
     private void Awake()
@@ -14,29 +14,25 @@ public class GameInput : MonoBehaviour
         playerInputActions.Enable();
     }
 
-    public Vector2 GetMovementVectorNormalized()
+    public Vector2 GetMovementVector()
     {
         Vector2 inputVector = playerInputActions.Player.Move.ReadValue<Vector2>();
         return inputVector;
     }
 
-    public Quaternion GetMouseRotationInWorld()
+    public (bool sucess, Vector3 position) GetMousePosition()
     {
-        Vector2 mouseScreenPosition = playerInputActions.Player.MousePosition.ReadValue<Vector2>();
-        Ray ray = _camera.ScreenPointToRay(mouseScreenPosition);
-        RaycastHit hit;
+        Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
 
-        Quaternion targetRotation = Quaternion.identity;
-
-        if(Physics.Raycast(ray, out hit, Mathf.Infinity, ground))
-        {
-            Vector3 targetDirection = hit.point - transform.position;
-            targetDirection.y = 0f;
-
-            // Rotate the character towards the mouse position
-            targetRotation = Quaternion.LookRotation(targetDirection);
-        }
-
-        return targetRotation;
+        if(Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, groundMask) ) 
+            return (sucess: true, position: hit.point);
+        else
+            return (sucess: false, position: Vector3.zero);
     }
+
+    public float IsShooting()
+    {
+        return playerInputActions.Player.Shooting.ReadValue<float>();
+    }
+
 }

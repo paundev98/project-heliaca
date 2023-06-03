@@ -5,30 +5,61 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     [SerializeField] private float moveSpeed;
-    [SerializeField] private float rotateSpeed;
+    [SerializeField] private float rotationSpeed;
     [SerializeField] private GameInput gameInput;
-    [SerializeField] private Animator animator;
+    [SerializeField] private Camera _main;
+    [SerializeField] private Vector3 cameraOffset;
 
-    private bool isWalking;
-    private bool isRotating;
+    [SerializeField] private Transform shootingPosition;
+    [SerializeField] private GameObject bulletPrefab;
+    [SerializeField] private int bulletsPerSecond;
 
+    private float fireRate;
+    private float fireTime;
+
+    private Vector2 inputVector;
+    private Vector3 lastInputPostion;
+
+    private void Start()
+    {
+        lastInputPostion = Vector3.zero;
+        fireRate = 1 / bulletsPerSecond;
+        fireTime = 0;
+    }
     private void Update()
     {
-        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
-        Quaternion targetRotation = gameInput.GetMouseRotationInWorld();
-        Vector3 moveDir = new Vector3(inputVector.x, 0.0f, inputVector.y);
+        inputVector = gameInput.GetMovementVector().normalized;
+        var (success, position) = gameInput.GetMousePosition();
 
-        transform.position += moveDir * moveSpeed * Time.deltaTime;
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotateSpeed);
-        isWalking = moveDir != Vector3.zero;
-        isRotating = targetRotation != Quaternion.identity;
+        transform.position += transform.forward * moveSpeed * inputVector.y * Time.deltaTime;
+        transform.position += transform.right * moveSpeed * inputVector.x * Time.deltaTime;
+        _main.transform.position = transform.position + cameraOffset;
 
-        if (isWalking)
-            animator.SetBool("isWalking", true);
-        else
-            animator.SetBool("isWalking", false);
+        if(success && lastInputPostion != position)
+        {
+            Vector3 direction = position - transform.position;
+            direction.y = 0;
+            transform.forward = direction;
+            lastInputPostion = position;
+        }
+
+        bool isShooting = gameInput.IsShooting() == 1;
+
+
+        if (isShooting)
+            Shoot(position);
+
     }
 
-    public bool IsWalking() { return isWalking; }
-    public bool IsRotating() { return isRotating; }
+    private void Shoot(Vector3 mousePos)
+    {
+        fireTime += Time.deltaTime;
+        if (fireTime >= fireRate)
+        {
+            Vector3 aimDir = (mousePos - shootingPosition.transform.position).normalized;
+            Instantiate(bulletPrefab, shootingPosition.transform.position, Quaternion.LookRotation(aimDir, Vector3.up));
+            fireTime = 0;
+        }
+    }
+
 }
