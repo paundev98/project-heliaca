@@ -5,19 +5,23 @@ using UnityEngine;
 public class PlayerAnimator : MonoBehaviour
 {
     [SerializeField] Animator animator;
-    [SerializeField] private GameInput gameInput;
+    [SerializeField] Player player;
 
-    private int verticalHash, horizontalHash;
+    private int walkingHash, aimingHash, deadHash;
     private void Start()
     {
-        verticalHash = Animator.StringToHash("Vertical");
-        horizontalHash = Animator.StringToHash("Horizontal");
+        deadHash = Animator.StringToHash("isDead");
+        walkingHash = Animator.StringToHash("isWalking");
+        aimingHash = Animator.StringToHash("isAiming");
     }
 
     private void Update()
     {
-        Vector2 inputVector = gameInput.GetMovementVector();
-        animator.SetFloat(verticalHash, inputVector.y);
-        animator.SetFloat(horizontalHash, inputVector.x);
+        bool isDead = player.IsDying();
+        bool isWalking = player.IsWalking();
+        bool isAiming = player.IsAiming();
+        animator.SetBool(walkingHash, isWalking);
+        animator.SetBool(aimingHash, isAiming);
+        animator.SetBool(deadHash, isDead);
     }
 }

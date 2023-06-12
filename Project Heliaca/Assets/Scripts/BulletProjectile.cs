@@ -5,17 +5,10 @@ using UnityEngine;
 public class BulletProjectile : MonoBehaviour
 {
     [SerializeField] private float bulletSpeed;
-    private Rigidbody rb;
     private float lifeTime;
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
         lifeTime = 0;
-    }
-
-    private void Start()
-    {
-        rb.velocity = transform.forward * bulletSpeed;
     }
 
     private void Update()
@@ -23,6 +16,11 @@ public class BulletProjectile : MonoBehaviour
         lifeTime += Time.deltaTime;
         if(lifeTime > 2.0f)
             Destroy(gameObject);
+    }
+
+    private void FixedUpdate()
+    {
+        transform.position += transform.up * bulletSpeed * Time.fixedDeltaTime;
     }
 
     private void OnTriggerEnter(Collider other)
